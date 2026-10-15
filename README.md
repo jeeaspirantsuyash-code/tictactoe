@@ -27,6 +27,6 @@ Make sure you have [Node.js](https://nodejs.org/) installed on your machine to r
 ### Installation & Execution
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/suyash pandey/tech-grid-game.git](https://github.com/your-username/tech-grid-game.git)
+   git clone https://github.com/jeeaspirantsuyash-code/tictactoe/tree/main
 Developed by Suyash Pandey
 linkdin-https://www.linkedin.com/in/suyash-pandey-432039430/?lipi=urn%3Ali%3Apage%3Ad_flagship3_feed%3B39m0uBqyQz%2BnUcZbHyCv5g%3D%3D
