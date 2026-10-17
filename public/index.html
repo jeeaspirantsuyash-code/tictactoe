@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#050914"><title>Mega Tic-Tac-Toe — Think • Plan • Win</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main class="app">
+  <header class="hero">
+    <div class="eyebrow">STRATEGY SYSTEM • ONLINE</div>
+    <div class="logo" aria-label="Mega Tic-Tac-Toe logo">
+      <svg viewBox="0 0 180 150" role="img" aria-label="Neon X O grid emblem">
+        <defs><linearGradient id="xg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#00eaff"/><stop offset="1" stop-color="#2373ff"/></linearGradient><linearGradient id="og" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#00ff9d"/><stop offset="1" stop-color="#00b86b"/></linearGradient></defs>
+        <g transform="translate(34 7) rotate(-9 55 45)" stroke="#087fff" stroke-width="2" fill="#071a35"><rect width="106" height="88" rx="8"/><path d="M21 0V88M42 0V88M63 0V88M84 0V88M0 22H106M0 44H106M0 66H106" opacity=".7"/></g>
+        <path d="M12 28L48 64M48 28L12 64" stroke="url(#xg)" stroke-width="11" stroke-linecap="round" fill="none" filter="drop-shadow(0 0 7px #00d9ff)"/>
+        <circle cx="129" cy="63" r="23" stroke="url(#og)" stroke-width="10" fill="none" filter="drop-shadow(0 0 7px #00ff9d)"/>
+        <path d="M50 112L62 124L84 98" fill="none" stroke="#00eaff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M96 120H162" stroke="#00ff9d" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <h1>MEGA <span>TIC-TAC-TOE</span></h1>
+    <p class="tagline">THINK <i>•</i> PLAN <i>•</i> WIN</p>
+    <p class="subtitle">A bigger board. A sharper mind.</p>
+  </header>
+
+  <section id="modeScreen" class="mode-screen" aria-labelledby="modeTitle">
+    <h2 id="modeTitle">CHOOSE YOUR BATTLE</h2>
+    <p class="muted">How do you want to play today?</p>
+    <div class="mode-cards">
+      <button class="mode-card human-card" id="humanMode">
+        <span class="mode-icon" aria-hidden="true">♟ <b>VS</b> ♟</span>
+        <strong>2 PLAYER</strong><span class="mode-description">Human vs Human</span>
+        <small>Play with a friend on the same device</small><span class="select-label">LET'S PLAY <span>↗</span></span>
+      </button>
+      <button class="mode-card ai-card" id="aiMode">
+        <span class="mode-icon" aria-hidden="true">♟ <b>VS</b> <span class="robot">▣</span></span>
+        <strong>HUMAN <em>VS</em> COMPUTER</strong><span class="mode-description">Challenge the AI</span>
+        <small>Can you outsmart the machine?</small><span class="select-label">CHALLENGE AI <span>↗</span></span>
+      </button>
+    </div>
+    <div class="features"><span>▦ <b>9 × 9 GRID</b></span><span>✦ <b>5 IN A ROW WINS</b></span><span>ϟ <b>NEON ARENA</b></span></div>
+  </section>
+
+  <section id="gameScreen" class="game-screen hidden">
+    <div class="game-top"><div><span class="eyebrow">CURRENT MATCH</span><h2 id="gameModeTitle">2 PLAYER BATTLE</h2></div><button class="ghost" id="changeMode">← MODES</button></div>
+    <div id="status" class="status" role="status" aria-live="polite">Player X's turn</div>
+    <div class="score-row"><div class="score x-score"><span>PLAYER X</span><b id="scoreX">0</b></div><div class="score o-score"><span id="oLabel">PLAYER O</span><b id="scoreO">0</b></div></div>
+    <div class="board-wrap"><div class="board" id="board" aria-label="9 by 9 game board"></div></div>
+    <div class="game-actions"><button id="restart">↻ NEW ROUND</button><button class="ghost" id="backToMenu">CHANGE MODE</button></div>
+    <p class="rule">Connect <strong>5 consecutive marks</strong> in any direction to win.</p>
+  </section>
+  <footer>MEGA TIC-TAC-TOE <span>•</span> MADE FOR STRATEGISTS</footer>
+</main>
+<script>
+(() => {
+ const N=9, TARGET=5, boardEl=document.getElementById('board'), statusEl=document.getElementById('status');
+ const modeScreen=document.getElementById('modeScreen'), gameScreen=document.getElementById('gameScreen');
+ let cells=Array(N*N).fill(''), player='X', active=false, mode='human', scores={X:0,O:0}, thinking=false;
+ const dirs=[[0,1],[1,0],[1,1],[1,-1]];
+ const at=(r,c)=>r*N+c, valid=(r,c)=>r>=0&&r<N&&c>=0&&c<N;
+ function setStatus(s){statusEl.textContent=s}
+ function chooseMode(m){mode=m;modeScreen.classList.add('hidden');gameScreen.classList.remove('hidden');document.getElementById('gameModeTitle').textContent=m==='ai'?'HUMAN VS COMPUTER':'2 PLAYER BATTLE';document.getElementById('oLabel').textContent=m==='ai'?'COMPUTER O':'PLAYER O';newRound()}
+ function showMenu(){active=false;thinking=false;gameScreen.classList.add('hidden');modeScreen.classList.remove('hidden')}
+ function newRound(){cells=Array(N*N).fill('');player='X';active=true;thinking=false;boardEl.innerHTML='';for(let i=0;i<N*N;i++){const b=document.createElement('button');b.type='button';b.className='cell';b.setAttribute('aria-label','Empty cell '+(Math.floor(i/N)+1)+','+(i%N+1));b.addEventListener('click',()=>move(i));boardEl.appendChild(b)}paint();setStatus(mode==='ai'?'Your turn — you are X':'Player X\'s turn')}
+ function paint(){[...boardEl.children].forEach((el,i)=>{el.textContent=cells[i];el.className='cell'+(cells[i]?' '+cells[i].toLowerCase():'');el.disabled=!active||!!cells[i]||thinking;el.setAttribute('aria-label',cells[i]?'Row '+(Math.floor(i/N)+1)+', column '+(i%N+1)+': '+cells[i]:'Empty cell '+(Math.floor(i/N)+1)+','+(i%N+1))});document.getElementById('scoreX').textContent=scores.X;document.getElementById('scoreO').textContent=scores.O}
+ function winningLine(i,p){const r=Math.floor(i/N),c=i%N;for(const [dr,dc] of dirs){let line=[i];for(const sign of [1,-1])for(let k=1;k<TARGET;k++){let rr=r+dr*k*sign,cc=c+dc*k*sign;if(valid(rr,cc)&&cells[at(rr,cc)]===p)line.push(at(rr,cc));else break}if(line.length>=TARGET)return line}return null}
+ function finish(p,line){active=false;scores[p]++;line.forEach(i=>boardEl.children[i].classList.add('win'));setStatus((mode==='ai'&&p==='O'?'Computer wins!':(mode==='ai'?'You win!':'Player '+p+' wins!'))+' 🎉');paint()}
+ function move(i){if(!active||thinking||cells[i])return;place(i,player);if(!active)return;if(mode==='ai'&&player==='O'){player='X';return}player=player==='X'?'O':'X';setStatus(mode==='ai'?'Your turn — you are X':"Player "+player+"'s turn");paint();if(mode==='ai'&&active){thinking=true;setStatus('Computer is thinking…');paint();setTimeout(aiMove,180)}}
+ function place(i,p){cells[i]=p;boardEl.children[i].textContent=p;boardEl.children[i].classList.add(p.toLowerCase());const line=winningLine(i,p);if(line){finish(p,line);return}if(!cells.includes('')){active=false;setStatus('Draw! Start a new round.');paint()}}
+ function aiMove(){if(!active)return;let pick=findTactical('O')??findTactical('X')??chooseStrategic();thinking=false;if(pick==null)pick=cells.findIndex(v=>!v);if(pick>=0)place(pick,'O');if(active){player='X';setStatus('Your turn — you are X')}paint()}
+ function findTactical(p){for(let i=0;i<cells.length;i++)if(!cells[i]){cells[i]=p;let win=winningLine(i,p);cells[i]='';if(win)return i}return null}
+ function chooseStrategic(){let best=null,bestScore=-Infinity,center=at(4,4);for(let i=0;i<cells.length;i++){if(cells[i])continue;let r=Math.floor(i/N),c=i%N,score=-(Math.abs(r-4)+Math.abs(c-4))*0.6;if(i===center)score+=3;let nearby=0;for(let rr=Math.max(0,r-2);rr<=Math.min(N-1,r+2);rr++)for(let cc=Math.max(0,c-2);cc<=Math.min(N-1,c+2);cc++)if(cells[at(rr,cc)])nearby+=1/(1+Math.abs(rr-r)+Math.abs(cc-c));score+=nearby*2;cells[i]='O';score+=patternScore(i,'O')*.85;cells[i]='X';score+=patternScore(i,'X');cells[i]='';if(score>bestScore){bestScore=score;best=i}}return best}
+ function patternScore(i,p){let score=0,r=Math.floor(i/N),c=i%N;for(const [dr,dc] of dirs){let count=1,open=0;for(const sign of [1,-1]){for(let k=1;k<TARGET;k++){let rr=r+dr*k*sign,cc=c+dc*k*sign;if(!valid(rr,cc))break;let v=cells[at(rr,cc)];if(v===p)count++;else{if(!v)open++;break}}}score+=count>=4?45:count>=3?12:count>=2?3:0;score+=open*.4}return score}
+ document.getElementById('humanMode').addEventListener('click',()=>chooseMode('human'));document.getElementById('aiMode').addEventListener('click',()=>chooseMode('ai'));document.getElementById('restart').addEventListener('click',newRound);document.getElementById('changeMode').addEventListener('click',showMenu);document.getElementById('backToMenu').addEventListener('click',showMenu);
+})();
+</script>
+</body></html>
