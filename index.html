@@ -66,9 +66,33 @@
  function paint(){[...boardEl.children].forEach((el,i)=>{el.textContent=cells[i];el.className='cell'+(cells[i]?' '+cells[i].toLowerCase():'');el.disabled=!active||!!cells[i]||thinking;el.setAttribute('aria-label',cells[i]?'Row '+(Math.floor(i/N)+1)+', column '+(i%N+1)+': '+cells[i]:'Empty cell '+(Math.floor(i/N)+1)+','+(i%N+1))});document.getElementById('scoreX').textContent=scores.X;document.getElementById('scoreO').textContent=scores.O}
  function winningLine(i,p){const r=Math.floor(i/N),c=i%N;for(const [dr,dc] of dirs){let line=[i];for(const sign of [1,-1])for(let k=1;k<TARGET;k++){let rr=r+dr*k*sign,cc=c+dc*k*sign;if(valid(rr,cc)&&cells[at(rr,cc)]===p)line.push(at(rr,cc));else break}if(line.length>=TARGET)return line}return null}
  function finish(p,line){active=false;scores[p]++;line.forEach(i=>boardEl.children[i].classList.add('win'));setStatus((mode==='ai'&&p==='O'?'Computer wins!':(mode==='ai'?'You win!':'Player '+p+' wins!'))+' 🎉');paint()}
- function move(i){if(!active||thinking||cells[i])return;place(i,player);if(!active)return;if(mode==='ai'&&player==='O'){player='X';return}player=player==='X'?'O':'X';setStatus(mode==='ai'?'Your turn — you are X':"Player "+player+"'s turn");paint();if(mode==='ai'&&active){thinking=true;setStatus('Computer is thinking…');paint();setTimeout(aiMove,180)}}
+ function move(i){if(!active||thinking||cells[i])return;
+   if(mode==='ai'){
+     // In computer mode the human always places X; the AI owns O.
+     place(i,'X');
+     if(!active)return;
+     thinking=true;setStatus('Computer is thinking…');paint();
+     const round=cells;setTimeout(()=>aiMove(round),180);
+     return;
+   }
+   place(i,player);
+   if(!active)return;
+   player=player==='X'?'O':'X';
+   setStatus("Player "+player+"'s turn");paint();
+ }
  function place(i,p){cells[i]=p;boardEl.children[i].textContent=p;boardEl.children[i].classList.add(p.toLowerCase());const line=winningLine(i,p);if(line){finish(p,line);return}if(!cells.includes('')){active=false;setStatus('Draw! Start a new round.');paint()}}
- function aiMove(){if(!active)return;let pick=findTactical('O')??findTactical('X')??chooseStrategic();thinking=false;if(pick==null)pick=cells.findIndex(v=>!v);if(pick>=0)place(pick,'O');if(active){player='X';setStatus('Your turn — you are X')}paint()}
+ function aiMove(round){
+   // Ignore a delayed AI callback if the round was restarted or the mode changed.
+   if(!active||mode!=='ai'||round!==cells)return;
+   let pick=findTactical('O');
+   if(pick==null)pick=findTactical('X');
+   if(pick==null)pick=chooseStrategic();
+   if(pick==null||pick<0)pick=cells.findIndex(v=>!v);
+   thinking=false;
+   if(pick>=0)place(pick,'O');
+   if(active){player='X';setStatus('Your turn — you are X')}
+   paint();
+ }
  function findTactical(p){for(let i=0;i<cells.length;i++)if(!cells[i]){cells[i]=p;let win=winningLine(i,p);cells[i]='';if(win)return i}return null}
  function chooseStrategic(){let best=null,bestScore=-Infinity,center=at(4,4);for(let i=0;i<cells.length;i++){if(cells[i])continue;let r=Math.floor(i/N),c=i%N,score=-(Math.abs(r-4)+Math.abs(c-4))*0.6;if(i===center)score+=3;let nearby=0;for(let rr=Math.max(0,r-2);rr<=Math.min(N-1,r+2);rr++)for(let cc=Math.max(0,c-2);cc<=Math.min(N-1,c+2);cc++)if(cells[at(rr,cc)])nearby+=1/(1+Math.abs(rr-r)+Math.abs(cc-c));score+=nearby*2;cells[i]='O';score+=patternScore(i,'O')*.85;cells[i]='X';score+=patternScore(i,'X');cells[i]='';if(score>bestScore){bestScore=score;best=i}}return best}
  function patternScore(i,p){let score=0,r=Math.floor(i/N),c=i%N;for(const [dr,dc] of dirs){let count=1,open=0;for(const sign of [1,-1]){for(let k=1;k<TARGET;k++){let rr=r+dr*k*sign,cc=c+dc*k*sign;if(!valid(rr,cc))break;let v=cells[at(rr,cc)];if(v===p)count++;else{if(!v)open++;break}}}score+=count>=4?45:count>=3?12:count>=2?3:0;score+=open*.4}return score}
