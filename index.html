@@ -40,7 +40,7 @@
         <small>Can you outsmart the machine?</small><span class="select-label">CHALLENGE AI <span>↗</span></span>
       </button>
     </div>
-    <div class="features"><span>▦ <b>9 × 9 GRID</b></span><span>✦ <b>5 IN A ROW WINS</b></span><span>ϟ <b>NEON ARENA</b></span></div>
+    <div class="features"><span>▦ <b>9 × 9 GRID</b></span><span>✦ <b>FULL LINE OF 9 WINS</b></span><span>ϟ <b>NEON ARENA</b></span></div>
   </section>
 
   <section id="gameScreen" class="game-screen hidden">
@@ -50,13 +50,13 @@
     <div class="score-row"><div class="score x-score"><span>PLAYER X</span><b id="scoreX">0</b></div><div class="score o-score"><span id="oLabel">PLAYER O</span><b id="scoreO">0</b></div></div>
     <div class="board-wrap"><div class="board" id="board" aria-label="9 by 9 game board"></div></div>
     <div class="game-actions"><button id="restart">↻ NEW ROUND</button><button class="ghost" id="backToMenu">CHANGE MODE</button></div>
-    <p class="rule">Connect <strong>5 consecutive marks</strong> in any direction to win.</p>
+    <p class="rule">Fill all <strong>9 cells in a complete row, column, or diagonal</strong> to win.</p>
   </section>
   <footer>MEGA TIC-TAC-TOE <span>•</span> MADE FOR STRATEGISTS</footer>
 </main>
 <script>
 (() => {
- const N=9, TARGET=5, boardEl=document.getElementById('board'), statusEl=document.getElementById('status');
+ const N=9, TARGET=9, boardEl=document.getElementById('board'), statusEl=document.getElementById('status');
  const modeScreen=document.getElementById('modeScreen'), gameScreen=document.getElementById('gameScreen');
  let cells=Array(N*N).fill(''), player='X', active=false, mode='human', scores={X:0,O:0}, thinking=false, roundLimit=3, roundsPlayed=0, roundWins={X:0,O:0}, draws=0, matchOver=false;
  const dirs=[[0,1],[1,0],[1,1],[1,-1]];
