@@ -27,6 +27,7 @@
   <section id="modeScreen" class="mode-screen" aria-labelledby="modeTitle">
     <h2 id="modeTitle">CHOOSE YOUR BATTLE</h2>
     <p class="muted">How do you want to play today?</p>
+    <div class="series-settings"><label for="roundLimit">NUMBER OF ROUNDS</label><select id="roundLimit"><option value="1">1 round</option><option value="3" selected>Best of 3 rounds</option><option value="5">Best of 5 rounds</option><option value="7">Best of 7 rounds</option><option value="9">Best of 9 rounds</option></select></div>
     <div class="mode-cards">
       <button class="mode-card human-card" id="humanMode">
         <span class="mode-icon" aria-hidden="true">♟ <b>VS</b> ♟</span>
@@ -45,6 +46,7 @@
   <section id="gameScreen" class="game-screen hidden">
     <div class="game-top"><div><span class="eyebrow">CURRENT MATCH</span><h2 id="gameModeTitle">2 PLAYER BATTLE</h2></div><button class="ghost" id="changeMode">← MODES</button></div>
     <div id="status" class="status" role="status" aria-live="polite">Player X's turn</div>
+    <div id="seriesStatus" class="series-status" aria-live="polite">Round 1 of 3</div>
     <div class="score-row"><div class="score x-score"><span>PLAYER X</span><b id="scoreX">0</b></div><div class="score o-score"><span id="oLabel">PLAYER O</span><b id="scoreO">0</b></div></div>
     <div class="board-wrap"><div class="board" id="board" aria-label="9 by 9 game board"></div></div>
     <div class="game-actions"><button id="restart">↻ NEW ROUND</button><button class="ghost" id="backToMenu">CHANGE MODE</button></div>
@@ -56,16 +58,17 @@
 (() => {
  const N=9, TARGET=5, boardEl=document.getElementById('board'), statusEl=document.getElementById('status');
  const modeScreen=document.getElementById('modeScreen'), gameScreen=document.getElementById('gameScreen');
- let cells=Array(N*N).fill(''), player='X', active=false, mode='human', scores={X:0,O:0}, thinking=false;
+ let cells=Array(N*N).fill(''), player='X', active=false, mode='human', scores={X:0,O:0}, thinking=false, roundLimit=3, roundsPlayed=0, roundWins={X:0,O:0}, draws=0, matchOver=false;
  const dirs=[[0,1],[1,0],[1,1],[1,-1]];
  const at=(r,c)=>r*N+c, valid=(r,c)=>r>=0&&r<N&&c>=0&&c<N;
  function setStatus(s){statusEl.textContent=s}
- function chooseMode(m){mode=m;modeScreen.classList.add('hidden');gameScreen.classList.remove('hidden');document.getElementById('gameModeTitle').textContent=m==='ai'?'HUMAN VS COMPUTER':'2 PLAYER BATTLE';document.getElementById('oLabel').textContent=m==='ai'?'COMPUTER O':'PLAYER O';newRound()}
+ function chooseMode(m){mode=m;roundLimit=Number(document.getElementById('roundLimit').value)||3;roundsPlayed=0;roundWins={X:0,O:0};draws=0;scores={X:0,O:0};matchOver=false;modeScreen.classList.add('hidden');gameScreen.classList.remove('hidden');document.getElementById('gameModeTitle').textContent=m==='ai'?'HUMAN VS COMPUTER':'2 PLAYER BATTLE';document.getElementById('oLabel').textContent=m==='ai'?'COMPUTER O':'PLAYER O';newRound()}
  function showMenu(){active=false;thinking=false;gameScreen.classList.add('hidden');modeScreen.classList.remove('hidden')}
- function newRound(){cells=Array(N*N).fill('');player='X';active=true;thinking=false;boardEl.innerHTML='';for(let i=0;i<N*N;i++){const b=document.createElement('button');b.type='button';b.className='cell';b.setAttribute('aria-label','Empty cell '+(Math.floor(i/N)+1)+','+(i%N+1));b.addEventListener('click',()=>move(i));boardEl.appendChild(b)}paint();setStatus(mode==='ai'?'Your turn — you are X':'Player X\'s turn')}
+ function newRound(){if(matchOver)return;cells=Array(N*N).fill('');player='X';active=true;thinking=false;boardEl.innerHTML='';for(let i=0;i<N*N;i++){const b=document.createElement('button');b.type='button';b.className='cell';b.setAttribute('aria-label','Empty cell '+(Math.floor(i/N)+1)+','+(i%N+1));b.addEventListener('click',()=>move(i));boardEl.appendChild(b)}paint();updateSeriesStatus();setStatus(mode==='ai'?'Your turn — you are X':'Player X\'s turn')}
  function paint(){[...boardEl.children].forEach((el,i)=>{el.textContent=cells[i];el.className='cell'+(cells[i]?' '+cells[i].toLowerCase():'');el.disabled=!active||!!cells[i]||thinking;el.setAttribute('aria-label',cells[i]?'Row '+(Math.floor(i/N)+1)+', column '+(i%N+1)+': '+cells[i]:'Empty cell '+(Math.floor(i/N)+1)+','+(i%N+1))});document.getElementById('scoreX').textContent=scores.X;document.getElementById('scoreO').textContent=scores.O}
- function winningLine(i,p){const r=Math.floor(i/N),c=i%N;for(const [dr,dc] of dirs){let line=[i];for(const sign of [1,-1])for(let k=1;k<TARGET;k++){let rr=r+dr*k*sign,cc=c+dc*k*sign;if(valid(rr,cc)&&cells[at(rr,cc)]===p)line.push(at(rr,cc));else break}if(line.length>=TARGET)return line}return null}
- function finish(p,line){active=false;scores[p]++;line.forEach(i=>boardEl.children[i].classList.add('win'));setStatus((mode==='ai'&&p==='O'?'Computer wins!':(mode==='ai'?'You win!':'Player '+p+' wins!'))+' 🎉');paint()}
+ function winningLine(i,p){const r=Math.floor(i/N),c=i%N;for(const [dr,dc] of dirs){let count=1;for(const sign of [1,-1])for(let k=1;k<TARGET;k++){let rr=r+dr*k*sign,cc=c+dc*k*sign;if(valid(rr,cc)&&cells[at(rr,cc)]===p)count++;else break}if(count>=TARGET){let full=[];if(dr===0){for(let cc=0;cc<N;cc++)full.push(at(r,cc))}else if(dc===0){for(let rr=0;rr<N;rr++)full.push(at(rr,c))}else if(dr===dc){for(let rr=0;rr<N;rr++){let cc=c+(rr-r);if(valid(rr,cc))full.push(at(rr,cc))}}else{for(let rr=0;rr<N;rr++){let cc=c-(rr-r);if(valid(rr,cc))full.push(at(rr,cc))}}return full}}return null}
+ function finish(p,line){active=false;scores[p]++;roundWins[p]++;roundsPlayed++;line.forEach(i=>boardEl.children[i].classList.add('win'));paint();if(roundsPlayed>=roundLimit){matchOver=true;const winner=roundWins.X===roundWins.O?null:(roundWins.X>roundWins.O?'X':'O');if(winner===null)setStatus('Match tied! 🤝');else setStatus((mode==='ai'?(winner==='O'?'Computer wins the match!':'You win the match!'):'Player '+winner+' wins the match!')+' 🏆');document.getElementById('seriesStatus').textContent='Match complete • X: '+roundWins.X+' wins • O: '+roundWins.O+' wins • Draws: '+draws;return}updateSeriesStatus();setStatus((mode==='ai'&&p==='O'?'Computer wins this round!':(mode==='ai'?'You win this round!':'Player '+p+' wins this round!'))+' 🎉')}
+ function updateSeriesStatus(){document.getElementById('seriesStatus').textContent='Round '+Math.min(roundsPlayed+1,roundLimit)+' of '+roundLimit+' • X wins: '+roundWins.X+' • O wins: '+roundWins.O+' • Draws: '+draws}
  function move(i){if(!active||thinking||cells[i])return;
    if(mode==='ai'){
      // In computer mode the human always places X; the AI owns O.
@@ -80,7 +83,7 @@
    player=player==='X'?'O':'X';
    setStatus("Player "+player+"'s turn");paint();
  }
- function place(i,p){cells[i]=p;boardEl.children[i].textContent=p;boardEl.children[i].classList.add(p.toLowerCase());const line=winningLine(i,p);if(line){finish(p,line);return}if(!cells.includes('')){active=false;setStatus('Draw! Start a new round.');paint()}}
+ function place(i,p){cells[i]=p;boardEl.children[i].textContent=p;boardEl.children[i].classList.add(p.toLowerCase());const line=winningLine(i,p);if(line){finish(p,line);return}if(!cells.includes('')){active=false;roundsPlayed++;draws++;paint();if(roundsPlayed>=roundLimit){matchOver=true;setStatus('Match complete! No winner this time. 🤝');document.getElementById('seriesStatus').textContent='Match complete • X: '+roundWins.X+' wins • O: '+roundWins.O+' wins • Draws: '+draws}else{updateSeriesStatus();setStatus('Round drawn! Start the next round.')}}}
  function aiMove(round){
    // Ignore a delayed AI callback if the round was restarted or the mode changed.
    if(!active||mode!=='ai'||round!==cells)return;
@@ -96,7 +99,7 @@
  function findTactical(p){for(let i=0;i<cells.length;i++)if(!cells[i]){cells[i]=p;let win=winningLine(i,p);cells[i]='';if(win)return i}return null}
  function chooseStrategic(){let best=null,bestScore=-Infinity,center=at(4,4);for(let i=0;i<cells.length;i++){if(cells[i])continue;let r=Math.floor(i/N),c=i%N,score=-(Math.abs(r-4)+Math.abs(c-4))*0.6;if(i===center)score+=3;let nearby=0;for(let rr=Math.max(0,r-2);rr<=Math.min(N-1,r+2);rr++)for(let cc=Math.max(0,c-2);cc<=Math.min(N-1,c+2);cc++)if(cells[at(rr,cc)])nearby+=1/(1+Math.abs(rr-r)+Math.abs(cc-c));score+=nearby*2;cells[i]='O';score+=patternScore(i,'O')*.85;cells[i]='X';score+=patternScore(i,'X');cells[i]='';if(score>bestScore){bestScore=score;best=i}}return best}
  function patternScore(i,p){let score=0,r=Math.floor(i/N),c=i%N;for(const [dr,dc] of dirs){let count=1,open=0;for(const sign of [1,-1]){for(let k=1;k<TARGET;k++){let rr=r+dr*k*sign,cc=c+dc*k*sign;if(!valid(rr,cc))break;let v=cells[at(rr,cc)];if(v===p)count++;else{if(!v)open++;break}}}score+=count>=4?45:count>=3?12:count>=2?3:0;score+=open*.4}return score}
- document.getElementById('humanMode').addEventListener('click',()=>chooseMode('human'));document.getElementById('aiMode').addEventListener('click',()=>chooseMode('ai'));document.getElementById('restart').addEventListener('click',newRound);document.getElementById('changeMode').addEventListener('click',showMenu);document.getElementById('backToMenu').addEventListener('click',showMenu);
+ document.getElementById('humanMode').addEventListener('click',()=>chooseMode('human'));document.getElementById('aiMode').addEventListener('click',()=>chooseMode('ai'));document.getElementById('restart').addEventListener('click',()=>{if(matchOver){roundsPlayed=0;roundWins={X:0,O:0};scores={X:0,O:0};draws=0;matchOver=false}newRound()});document.getElementById('changeMode').addEventListener('click',showMenu);document.getElementById('backToMenu').addEventListener('click',showMenu);
 })();
 </script>
 </body></html>
