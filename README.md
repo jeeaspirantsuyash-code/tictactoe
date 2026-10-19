@@ -1,7 +1,7 @@
 # tictactoe
 # ⚡ Tech Grid: 9x9 Matrix
 
-![UI Showcase](https://via.placeholder.com/800x400/050914/00f3ff?text=Take+a+screenshot+of+your+game+and+replace+this+link)
+![UI Showcase](sandbox:/mnt/data/94322.jpg)
 
 ## 🚀 Overview
 Tech Grid is a high-octane, cyberpunk-inspired variant of the classic Criss-Cross (Tic-Tac-Toe) game. Engineered for hackathon environments, this project takes the traditional 3x3 board and expands it into a massive 9x9 matrix. 
