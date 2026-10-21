@@ -6,6 +6,16 @@
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+<div class="aquarium-scene" aria-hidden="true">
+  <div class="water-surface"></div>
+  <div class="caustics"></div>
+  <div class="bubble bubble-a"></div><div class="bubble bubble-b"></div><div class="bubble bubble-c"></div>
+  <div class="bubble bubble-d"></div><div class="bubble bubble-e"></div><div class="bubble bubble-f"></div>
+  <div class="aquarium-fish fish-a"><span></span></div>
+  <div class="aquarium-fish fish-b"><span></span></div>
+  <div class="aquarium-fish fish-c"><span></span></div>
+  <div class="plant plant-a"></div><div class="plant plant-b"></div><div class="plant plant-c"></div>
+</div>
 <main class="app">
   <header class="hero">
     <div class="eyebrow">STRATEGY SYSTEM • ONLINE</div>
@@ -30,12 +40,12 @@
     <div class="series-settings"><label for="roundLimit">NUMBER OF ROUNDS</label><select id="roundLimit"><option value="1">1 round</option><option value="3" selected>3 rounds</option><option value="5">5 rounds</option><option value="7">7 rounds</option><option value="9">9 rounds</option></select></div>
     <div class="mode-cards">
       <button class="mode-card human-card" id="humanMode">
-        <span class="mode-icon" aria-hidden="true">♟ <b>VS</b> ♟</span>
+        <span class="mode-icon" aria-hidden="true"><span class="ui-fish"></span><b>VS</b><span class="ui-fish flip"></span></span>
         <strong>2 PLAYER</strong><span class="mode-description">Human vs Human</span>
         <small>Play with a friend on the same device</small><span class="select-label">LET'S PLAY <span>↗</span></span>
       </button>
       <button class="mode-card ai-card" id="aiMode">
-        <span class="mode-icon" aria-hidden="true">♟ <b>VS</b> <span class="robot">▣</span></span>
+        <span class="mode-icon" aria-hidden="true"><span class="ui-fish"></span><b>VS</b><span class="ai-bubble">AI</span></span>
         <strong>HUMAN <em>VS</em> COMPUTER</strong><span class="mode-description">Challenge the AI</span>
         <small>Can you outsmart the machine?</small><span class="select-label">CHALLENGE AI <span>↗</span></span>
       </button>
@@ -44,12 +54,12 @@
   </section>
 
   <section id="gameScreen" class="game-screen hidden">
-    <div class="game-top"><div><span class="eyebrow">CURRENT MATCH</span><h2 id="gameModeTitle">2 PLAYER BATTLE</h2></div><button class="ghost" id="changeMode">← MODES</button></div>
+    <div class="game-top"><div><span class="eyebrow">CURRENT MATCH</span><h2 id="gameModeTitle">2 PLAYER BATTLE</h2></div><button class="ghost fish-button" id="changeMode">← MODES</button></div>
     <div id="status" class="status" role="status" aria-live="polite">Player X's turn</div>
     <div id="seriesStatus" class="series-status" aria-live="polite">Round 1 of 3</div>
     <div class="score-row"><div class="score x-score"><span>PLAYER X</span><b id="scoreX">0</b></div><div class="score o-score"><span id="oLabel">PLAYER O</span><b id="scoreO">0</b></div></div>
     <div class="board-wrap"><div class="board" id="board" aria-label="9 by 9 game board"></div></div>
-    <div class="game-actions"><button id="restart">↻ NEW ROUND</button><button class="ghost" id="backToMenu">CHANGE MODE</button></div>
+    <div class="game-actions"><button class="fish-button" id="restart">↻ NEW ROUND</button><button class="ghost fish-button" id="backToMenu">CHANGE MODE</button></div>
     <p class="rule">Fill all <strong>9 cells in a complete row, column, or diagonal</strong> to win.</p>
   </section>
   <footer>MEGA TIC-TAC-TOE <span>•</span> MADE FOR STRATEGISTS</footer>
